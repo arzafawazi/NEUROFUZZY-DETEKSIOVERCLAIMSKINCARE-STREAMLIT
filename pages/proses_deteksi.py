@@ -134,7 +134,9 @@ def _exec_preprocessing(log, prog):
     log("info", "=== TAHAP 1: PREPROCESSING TEKS ===")
     try:
         data = execute_query(
-            "SELECT id, teks_iklan FROM dataset_iklan ORDER BY id",
+            """SELECT id, claim_text, ingredients,
+                      review_text, review_length, claim_length, rating
+               FROM dataset_iklan ORDER BY id""",
             fetch=True
         )
         if not data:
@@ -147,10 +149,10 @@ def _exec_preprocessing(log, prog):
         prog.progress(0.0, "Preprocessing...")
         time.sleep(0.3)
 
-        # Simulasikan progress
-        for i, d in enumerate(data[:5]):  # preview log 5 pertama
+        # Preview log 5 pertama
+        for i, d in enumerate(data[:5]):
             from models.preprocessor import full_preprocess
-            result = full_preprocess(d["teks_iklan"])
+            result = full_preprocess(str(d.get("claim_text") or ""))
             log("ok", f"[ID:{d['id']}] Tokens:{result['token_count']} | "
                       f"Normalized: {result['normalized'][:60]}...")
             prog.progress((i + 1) / max(len(data), 1), f"Preprocessing {i+1}/{len(data)}")
@@ -172,10 +174,14 @@ def _exec_feature_extraction(log, prog):
     log("info", "=== TAHAP 2: EKSTRAKSI FITUR TEKSTUAL ===")
     try:
         data = st.session_state.get("raw_data") or execute_query(
-            "SELECT id, teks_iklan FROM dataset_iklan", fetch=True
+            """SELECT id, claim_text, ingredients,
+                      review_text, review_length, claim_length, rating
+               FROM dataset_iklan""",
+            fetch=True
         )
         log("info", f"Mengekstrak fitur dari {len(data)} dokumen...")
-        log("info", "Fitur: TF-IDF, Hyperbolic Count, Scientific Count, Absolute Count, Intensity Score, N-Gram...")
+        log("info", "Fitur: TF-IDF · Hyperbolic · Scientific · Absolute · "
+                    "Intensity · Claim Length · Ingredient Count · Rating...")
 
         prog.progress(0.0, "Fitting TF-IDF...")
         df_features = preprocess_batch(data, log_callback=log)
@@ -248,8 +254,14 @@ def _exec_anfis(log, prog, num_mf, mf_type, lr, epochs,
         # Simpan run ke DB
         run_id = _save_run(run_name, num_mf, lr, epochs, len(X),
                            eval_metrics, user_id)
-        if not run_id:
-            raise Exception("Failed to save run to database.")
+        
+        # --- PENGECEKAN ID INDUK (Mencegah Error 1452) ---
+        if run_id == 0:
+            log("error", "❌ Gagal menyimpan tabel induk (detection_run). Proses dibatalkan.")
+            st.error("Gagal mendapat ID Run. Cek pesan error aslinya di log/terminal!")
+            return
+        # -------------------------------------------------
+
         log("info", f"Detection Run ID: {run_id}")
 
         # Simpan hasil per iklan
@@ -279,8 +291,7 @@ def _save_run(name, num_mf, lr, epochs, total, metrics, user_id) -> int:
             fetch=True)
         cfg_id = cfg[0]["id"] if cfg else None
 
-        # Insert record baru
-        execute_query(
+        run_id = execute_query(
             """INSERT INTO detection_run
                (run_name, config_id, total_data, processed_data,
                 accuracy, precision_val, recall_val, f1_score,
@@ -290,48 +301,43 @@ def _save_run(name, num_mf, lr, epochs, total, metrics, user_id) -> int:
              metrics.get("accuracy"), metrics.get("precision"),
              metrics.get("recall"), metrics.get("f1_score"), user_id)
         )
-        
-        # PERBAIKAN: Ambil ID menggunakan run_name yang spesifik agar tidak terpengaruh koneksi terputus
-        row = execute_query(
-            "SELECT id FROM detection_run WHERE run_name=%s ORDER BY id DESC LIMIT 1", 
-            (name,), fetch=True
-        )
-        
-        if row and len(row) > 0:
-            return int(row[0]["id"])
-        else:
-            raise Exception("Gagal mendapatkan ID untuk run_name yang baru disimpan.")
-            
+        return run_id
     except Exception as e:
-        raise Exception(f"Failed to save run: {e}")
+        print(f"\n[ERROR DATABASE DI _save_run] -> {e}\n")
+        st.error(f"Error query _save_run: {e}")
+        return 0
 
 
 def _save_results(run_id, df, labels, scores, model):
     try:
         iklan_rows = execute_query(
-            "SELECT id, platform, teks_iklan, label_manual FROM dataset_iklan",
+            """SELECT id, platform, claim_text,
+                      label_manual, label_overclaim
+               FROM dataset_iklan""",
             fetch=True)
         iklan_map = {r["id"]: r for r in iklan_rows}
 
         data_rows = []
-        from models.anfis import LABEL_MAP, LABEL_MAP_INV
+        from models.anfis import LABEL_MAP, LABEL_MAP_INV, FEATURE_NAMES
         for i, row in df.iterrows():
             iklan_id = int(row["id"])
             iklan    = iklan_map.get(iklan_id, {})
             label    = LABEL_MAP.get(int(labels[i]), "tidak_overclaim")
             score    = float(scores[i])
-            snippet  = str(iklan.get("teks_iklan",""))[:300]
+            # Gunakan claim_text sebagai snippet
+            snippet  = str(iklan.get("claim_text",""))[:300]
             asli     = iklan.get("label_manual")
-            is_correct = (1 if asli and LABEL_MAP_INV.get(asli,0) == int(labels[i])
+            is_correct = (1 if asli and LABEL_MAP_INV.get(asli, 0) == int(labels[i])
                           else (0 if asli else None))
-            x_row    = df.iloc[i][["intensity_score","hyperbolic_count",
-                                   "absolute_count"]].values.astype(float)
-            alasan   = model.explain_prediction(x_row)
-            
-            # PERBAIKAN: Memastikan run_id masuk sebagai integer murni ke MySQL
+            # Ambil nilai 5 fitur ANFIS untuk explain
+            feat_vals = []
+            for fn in FEATURE_NAMES:
+                feat_vals.append(float(df.iloc[i].get(fn, 0) or 0))
+            x_row  = np.array(feat_vals)
+            alasan = model.explain_prediction(x_row)
             data_rows.append((
-                int(run_id), int(iklan_id),
-                iklan.get("platform","Lainnya"),
+                run_id, iklan_id,
+                iklan.get("platform", "Lainnya"),
                 snippet, label, score, score, asli,
                 is_correct, alasan
             ))

@@ -45,7 +45,7 @@ def execute_query(sql: str, params: tuple = None, fetch: bool = False):
     """
     Eksekusi query tunggal.
     - fetch=True  → kembalikan list of dict
-    - fetch=False → kembalikan rows affected
+    - fetch=False → kembalikan last_insert_id (jika insert) atau rows affected
     """
     conn = get_connection()
     try:
@@ -56,7 +56,13 @@ def execute_query(sql: str, params: tuple = None, fetch: bool = False):
             return result
         else:
             conn.commit()
+            # --- INI KUNCI PERBAIKANNYA ---
+            # Jika ada ID yang baru dibuat (auto-increment), kembalikan ID tersebut.
+            # Jika tidak, kembalikan jumlah baris yang terpengaruh (rowcount).
+            if cursor.lastrowid:
+                return cursor.lastrowid
             return cursor.rowcount
+            # ------------------------------
     except mysql.connector.Error as e:
         conn.rollback()
         raise RuntimeError(f"Query gagal: {e}")

@@ -112,12 +112,17 @@ def _load_runs():
 
 
 def _load_results(run_id, platform, kategori, date_from, date_to, search):
+    # Kita tambahkan LEFT JOIN ke dataset_iklan (alias d)
+    # untuk mengambil brand, product_name, category, price, dll.
     sql = """
-        SELECT h.id, h.platform, h.teks_iklan_snippet,
+        SELECT h.id, h.iklan_id, d.brand, d.product_name, d.category, 
+               d.price, d.rating, d.total_review, d.ingredients,
+               h.platform, h.teks_iklan_snippet,
                h.kategori_overclaim, h.confidence_score,
                h.label_asli, h.is_correct, h.alasan_fuzzy,
                h.analyzed_at
         FROM hasil_deteksi h
+        LEFT JOIN dataset_iklan d ON h.iklan_id = d.id
         WHERE h.run_id=%s
     """
     params = [run_id]
@@ -128,8 +133,10 @@ def _load_results(run_id, platform, kategori, date_from, date_to, search):
     sql += " AND DATE(h.analyzed_at) BETWEEN %s AND %s"
     params.extend([date_from, date_to])
     if search:
-        sql += " AND h.teks_iklan_snippet LIKE %s"
-        params.append(f"%{search}%")
+        sql += """ AND (h.teks_iklan_snippet LIKE %s 
+                     OR d.brand LIKE %s 
+                     OR d.product_name LIKE %s)"""
+        params.extend([f"%{search}%"] * 3)
     sql += " ORDER BY h.id DESC LIMIT 500"
 
     try:
@@ -154,14 +161,27 @@ def _render_table(df: pd.DataFrame):
         lambda x: "✅" if x == 1 else ("❌" if x == 0 else "—")
     )
     display["Tanggal"] = pd.to_datetime(display["analyzed_at"]).dt.strftime("%d/%m/%Y %H:%M")
+    
+    # Format Harga
+    display["Harga"] = display["price"].apply(
+        lambda x: f"Rp {int(float(x)):,}".replace(",",".") if pd.notna(x) and x else "—"
+    )
 
-    html = display[["id","platform","teks_iklan_snippet",
-                    "Kategori","Confidence","Benar?","Tanggal"]].rename(columns={
-        "id":"No","platform":"Platform","teks_iklan_snippet":"Teks Iklan",
+    # Pilih urutan kolom yang ingin ditampilkan di tabel HTML
+    html = display[["id", "brand", "product_name", "category", "Harga", "rating", "platform", 
+                    "teks_iklan_snippet", "Kategori", "Confidence", "Benar?", "Tanggal"]].rename(columns={
+        "id":"No", "brand":"Brand", "product_name":"Nama Produk", 
+        "category":"Kategori Produk", "rating":"Rating",
+        "platform":"Platform", "teks_iklan_snippet":"Teks Iklan"
     }).to_html(escape=False, index=False,
                classes="table table-hover table-striped table-sm",
                border=0)
-    st.markdown(html, unsafe_allow_html=True)
+               
+    # Tambahkan bungkus div agar bisa di-scroll ke samping (karena kolomnya banyak)
+    st.markdown(
+        f'<div style="overflow-x:auto;max-height:500px;overflow-y:auto">{html}</div>', 
+        unsafe_allow_html=True
+    )
     st.markdown('</div>', unsafe_allow_html=True)
 
 

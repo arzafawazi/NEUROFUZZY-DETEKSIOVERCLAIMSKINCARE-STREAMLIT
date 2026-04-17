@@ -1,31 +1,31 @@
-teks_iklan,platform,brand,label_manual
-"Serum ajaib ini terbukti secara klinis memutihkan kulit 100% dalam 7 hari! Dijamin ampuh tanpa efek samping!",Shopee,Brand A,tinggi
-"Pelembab wajah dengan kandungan hyaluronic acid, cocok untuk kulit kering dan normal.",Tokopedia,Brand B,tidak_overclaim
-"Krim revolusioner! Hapus jerawat selamanya dalam semalam, formula super ultra power!",Shopee,Brand C,tinggi
-"Sunscreen SPF 50 PA++++ melindungi kulit dari sinar UVA & UVB, cocok untuk aktivitas outdoor.",Instagram,Brand D,tidak_overclaim
-"Toner terbaik nomor 1 Indonesia! Pori-pori mengecil dramatis dalam 1x pakai!",Tokopedia,Brand E,sedang
-"Masker wajah alami dari ekstrak bahan pilihan, formula lembut untuk semua jenis kulit.",TikTok,Brand F,tidak_overclaim
-"Eye cream super ampuh! Hilangkan kantung mata seketika, tampil 20 tahun lebih muda permanen!",Lazada,Brand G,tinggi
-"Essence brightening dengan niacinamide 10% membantu meratakan warna kulit secara bertahap.",Shopee,Brand H,rendah
-"Sabun muka anti-aging mutlak! Kulit awet muda abadi selamanya! Terbukti 100%!",Bukalapak,Brand I,tinggi
-"Body lotion dengan vitamin E dan C untuk kelembapan kulit sepanjang hari.",Tokopedia,Brand J,tidak_overclaim
-"Serum vitamin C 20% membantu mencerahkan kulit kusam dan mengurangi hiperpigmentasi.",Instagram,Brand K,rendah
-"Krim whitening instan putih sempurna dalam 3 hari! 100% dijamin atau uang kembali!",Shopee,Brand L,tinggi
-"Tinted moisturizer ringan untuk tampilan natural sehari-hari dengan SPF 30.",TikTok,Brand M,tidak_overclaim
-"Facial wash dengan AHA BHA membersihkan pori secara menyeluruh dan lembut di kulit.",Tokopedia,Brand N,rendah
-"Retinol serum dewa! Hapus kerutan wajah total permanen selamanya! Mukjizat skincare!",Shopee,Brand O,tinggi
-"Pembersih makeup gentle berbasis micellar water, cocok untuk kulit sensitif.",Lazada,Brand P,tidak_overclaim
-"Lip serum menghitam bibir berubah merah muda natural dalam 3 hari dijamin!",Instagram,Brand Q,sedang
-"Moisturizer oil-free untuk kulit berminyak, membantu mengontrol produksi sebum.",Tokopedia,Brand R,tidak_overclaim
-"Super whitening cream! Kulit gelap jadi cerah bersinar dalam 1 malam! Ajaib!",Shopee,Brand S,tinggi
-"Sheet mask dengan kolagen dan hyaluronic acid untuk kelembapan ekstra 24 jam.",TikTok,Brand T,rendah
-"Produk miracle ini hilangkan bekas jerawat 100% dalam seminggu total bersih!",Shopee,Brand U,tinggi
-"Toner balancing dengan witch hazel membantu menyeimbangkan pH kulit.",Bukalapak,Brand V,tidak_overclaim
-"Anti-aging serum terbukti hilangkan kerutan 70% dalam 14 hari uji klinis.",Instagram,Brand W,sedang
-"Cleanser lembut bebas sulfat cocok untuk kulit sensitif dan berjerawat.",Tokopedia,Brand X,tidak_overclaim
-"Krim flek hitam super! Hilang total dalam 5 hari! Nomor 1 se-Asia! Terampuh!",Shopee,Brand Y,tinggi
-"Facial oil dari rosehip seed membantu menutrisi dan meremajakan kulit kering.",Lazada,Brand Z,tidak_overclaim
-"Serum anti-pori terbaik! Pori nol dalam 3 hari pakai! Amazing incredible!",TikTok,Brand AA,tinggi
-"Exfoliating toner dengan lactic acid gentle untuk pengelupasan kulit mati.",Instagram,Brand BB,rendah
-"Tabir surya ringan SPF 35 dengan formula water-resistant untuk aktivitas sehari-hari.",Shopee,Brand CC,tidak_overclaim
-"Minyak zaitun murni organik untuk melembutkan dan melembapkan kulit tubuh.",Tokopedia,Brand DD,tidak_overclaim
+product_id,brand,product_name,category,price,rating,total_review,claim_text,ingredients,review_text,review_length,claim_length,label_overclaim
+501,Scarlett,Scarlett Sunscreen Series 8,Sunscreen,106150,4.8,2070,secara bertahap mencerahkan dan menyamarkan noda hitam hasil dapat berbeda,"Tea Tree, Vitamin C, Centella Asiatica, Hyaluronic Acid",Efeknya biasa saja.,3,10,0
+502,Somethinc,Somethinc Level 1% B,Serum,189000,4.7,3120,mencerahkan kulit kusam dan meratakan warna kulit dalam 4 minggu,"Niacinamide 1%, Zinc PCA, Hyaluronic Acid",Kulit terasa lebih lembab setelah 2 minggu pemakaian.,10,13,0
+503,Wardah,Wardah White Secret Day Cream,Moisturizer,45000,4.5,5430,memutihkan kulit secara sempurna dalam 7 hari dijamin 100%,"Vitamin B3, Vitamin C, SPF 28",Tidak terlalu terasa perubahannya.,5,11,3
+504,Emina,Emina Sun Protection SPF 30,Sunscreen,38000,4.3,2890,melindungi kulit dari paparan sinar matahari dan polusi,"Zinc Oxide, Titanium Dioxide, Aloe Vera",Cocok untuk kulit sensitif saya.,6,9,0
+505,Ms Glow,Ms Glow Luminous Series,Serum,250000,4.6,7810,mencerahkan kulit secara instan dan permanen tanpa efek samping apapun,"Alpha Arbutin, Niacinamide, Glycerin",Kulit lebih cerah tapi tidak secepat klaimnya.,10,12,2
+506,Hanasui,Hanasui Tattooer Lipcream,Lipcream,25000,4.4,9230,warna tahan lama hingga 24 jam anti flek dan anti transfer,"Shea Butter, Vitamin E, Beeswax",Warnanya bagus tapi tidak sampai 24 jam.,8,11,1
+507,Azarine,Azarine Hydrasoothe Sunscreen,Sunscreen,55000,4.8,4120,melembapkan dan melindungi kulit dari UVA UVB serta polusi,"Centella Asiatica, Hyaluronic Acid, Zinc Oxide",Ringan di kulit dan tidak meninggalkan white cast.,9,11,0
+508,Skintific,Skintific 5X Ceramide Serum,Serum,189000,4.9,6780,memulihkan skin barrier rusak 100% dan menghilangkan semua masalah kulit,"Ceramide NP, Ceramide AP, Ceramide EOP, Niacinamide",Terasa lebih lembab dan skin barrier terasa lebih baik.,9,14,2
+509,Mineral Botanica,Mineral Botanica Acne Series,Moisturizer,89000,4.2,1560,menghilangkan jerawat membandel selamanya dan mencegah jerawat baru tumbuh,"Salicylic Acid, Tea Tree Oil, Niacinamide",Jerawat berkurang tapi tidak hilang sepenuhnya.,7,12,2
+510,Base,Base Essence Serum,Serum,320000,4.7,2340,mengencangkan kulit wajah dan menghilangkan kerutan secara signifikan,"Retinol 0.1%, Peptide Complex, Vitamin E",Ada perbaikan tekstur kulit setelah sebulan pemakaian.,8,11,1
+511,Avoskin,Avoskin Miraculous Retinol Ampoule,Serum,285000,4.8,3670,mengurangi tanda-tanda penuaan dan kerutan secara klinis teruji,"Retinol, Peptide, Hyaluronic Acid",Kulit lebih halus dan kenyal dalam 3 minggu.,8,10,0
+512,The Originote,The Originote Ceramide Gel Cream,Moisturizer,49000,4.5,4120,menjaga kelembapan kulit sepanjang hari dan memperkuat skin barrier,"Ceramide, Niacinamide, Hyaluronic Acid",Ringan dan cocok untuk kulit berminyak.,6,11,0
+513,Implora,Implora Glow Serum,Serum,22000,3.8,8930,mencerahkan kulit wajah menjadi putih bersinar dalam 3 hari terbukti,"Vitamin C, Alpha Arbutin, Kojic Acid",Tidak terlalu berasa efeknya selama sebulan pemakaian.,6,12,3
+514,Pixy,Pixy UV Whitening Two Way Cake,Bedak,65000,4.3,6780,memutihkan dan meratakan warna kulit serta menyamarkan noda hitam secara total,"Titanium Dioxide, Zinc Oxide, Vitamin E",Coveragenya lumayan untuk sehari-hari.,5,12,1
+515,Garnier,Garnier Micellar Water Pink,Cleanser,45000,4.7,12340,membersihkan makeup waterproof hingga 100% bersih tanpa perlu dibilas,"Micellar Water, Rose Water, Glycerin",Membersihkan makeup dengan efektif dan lembut di kulit.,7,11,1
+516,LOreal,LOreal Paris Revitalift Serum,Serum,189000,4.6,4560,mengurangi kerutan hingga 54% dalam 4 minggu uji klinis dermatologis,"Pro-Retinol, Centella Asiatica, Hyaluronic Acid",Kulit terasa lebih kencang dan lembap.,7,11,1
+517,Bioderma,Bioderma Sensibio H2O,Cleanser,185000,4.9,5670,cocok untuk kulit sensitif dan membersihkan tanpa merusak skin barrier,"Micellar Water, Cucumber Extract, Vitamin E",Sangat lembut di kulit sensitif saya.,7,10,0
+518,COSRX,COSRX Advanced Snail 96 Mucin,Serum,279000,4.8,7890,membantu mempercepat regenerasi sel kulit dan memudarkan bekas luka,"Snail Secretion Filtrate 96%, Sodium Hyaluronate",Bekas jerawat memudar setelah sebulan pemakaian.,8,10,0
+519,Innisfree,Innisfree Green Tea Seed Serum,Serum,310000,4.7,6540,melembapkan kulit hingga 72 jam dengan formula green tea jeju island,"Jeju Green Tea, Amino Acids, Green Tea Seed",Kulit terasa sangat lembab dan segar.,7,11,0
+520,Ponds,Ponds Age Miracle Day Cream,Moisturizer,55000,4.1,9870,mengurangi kerutan dan bintik hitam menjadikan kulit 10 tahun lebih muda permanen,"Retinol-C, Glycerin, Niacinamide",Ada sedikit perubahan tapi tidak sedramatis klaimnya.,9,14,2
+521,Nivea,Nivea Extra White Serum,Serum,89000,4.2,7650,mencerahkan kulit hingga 10x lebih cerah dalam waktu 7 hari,"Vitamin C, Niacinamide, SPF 15",Tidak sampai 10x lebih cerah tapi ada perubahan sedikit.,8,10,2
+522,Olay,Olay Total Effects 7 in 1,Moisturizer,145000,4.5,5430,mengatasi 7 tanda penuaan sekaligus dalam satu produk secara menyeluruh,"Niacinamide, Vitamin E, Pro-Vitamin B5",Teksturnya ringan dan cocok untuk pemakaian pagi hari.,7,11,0
+523,Cetaphil,Cetaphil Gentle Skin Cleanser,Cleanser,125000,4.9,15670,membersihkan kulit dengan lembut tanpa mengganggu keseimbangan pH kulit,"Cetyl Alcohol, Stearyl Alcohol, Methylparaben",Sangat cocok untuk kulit sensitif dan berjerawat.,8,11,0
+524,Vaseline,Vaseline Healthy White SPF 24,Lotion,65000,4.0,11230,mencerahkan kulit dalam 2 minggu dengan teknologi micro-droplet vaseline,"Petroleum Jelly, Vitamin B3, SPF 24",Kulit terasa lebih lembab tapi tidak terlalu cerah.,7,11,1
+525,Neutrogena,Neutrogena Hydro Boost Water Gel,Moisturizer,219000,4.8,8760,menghidrasi kulit hingga 48 jam dan mengunci kelembapan sepanjang hari,"Hyaluronic Acid, Dimethicone, Glycerin",Terasa sangat lembab dan ringan di kulit.,8,11,0
+526,Clean and Clear,Clean and Clear Morning Energy,Cleanser,28000,4.1,6540,menghilangkan jerawat dan komedo sepenuhnya dalam 3 hari pemakaian rutin,"Salicylic Acid, Fruit Extracts, Menthol",Lumayan untuk membersihkan wajah sehari-hari.,7,11,2
+527,Hada Labo,Hada Labo Gokujyun Lotion,Toner,130000,4.8,9870,meningkatkan kelembapan kulit hingga 180% dengan 5 jenis hyaluronic acid,"Super Hyaluronic Acid, Hyaluronic Acid, Sodium Acetylated Hyaluronate",Kulit terasa sangat lembab setelah pemakaian.,8,12,1
+528,Some By Mi,Some By Mi AHA BHA PHA Toner,Toner,175000,4.7,11230,mengatasi masalah kulit dalam 30 hari pemakaian secara signifikan,"AHA, BHA, PHA, Tea Tree",Jerawat berkurang cukup signifikan dalam sebulan pemakaian.,7,10,0
+529,Dear Me Beauty,Dear Me Beauty Skin Tint,Skincare,149000,4.6,3450,meratakan warna kulit dan memberikan tampilan natural sehat bercahaya,"Niacinamide, Hyaluronic Acid, SPF 30",Ringan di kulit dan memberikan tampilan natural yang bagus.,8,10,0
+530,Erha,Erha 21 Acne Series,Moisturizer,195000,4.5,2780,mengatasi jerawat dari dalam dan luar secara total tanpa kambuh lagi,"Benzoyl Peroxide, Niacinamide, Centella Asiatica",Jerawat berkurang tapi perlu konsistensi dalam pemakaian.,8,11,1

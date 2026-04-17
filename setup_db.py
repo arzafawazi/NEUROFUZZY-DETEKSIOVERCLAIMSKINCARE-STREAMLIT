@@ -4,7 +4,6 @@ Script setup awal: buat database, tabel, dan seed data demo.
 Jalankan sekali sebelum menjalankan aplikasi:
     python setup_db.py
 """
-import sys
 import os
 import bcrypt
 import mysql.connector
@@ -36,14 +35,13 @@ def run_setup():
     conn = get_raw_connection()
     cur  = conn.cursor()
 
-    # 1. Buat database
     db_name = os.getenv("DB_NAME", "skincare_overclaim")
     cur.execute(f"CREATE DATABASE IF NOT EXISTS `{db_name}` "
                 f"CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci")
     cur.execute(f"USE `{db_name}`")
     print(f"✅ Database '{db_name}' siap.")
 
-    # 2. Buat tabel users
+    # ── Tabel users ───────────────────────────────────────────
     cur.execute("""
     CREATE TABLE IF NOT EXISTS users (
         id          INT AUTO_INCREMENT PRIMARY KEY,
@@ -58,58 +56,83 @@ def run_setup():
     ) ENGINE=InnoDB
     """)
 
-    # 3. Tabel dataset_iklan
+    # ── Tabel dataset_iklan (skema lengkap baru) ──────────────
     cur.execute("""
     CREATE TABLE IF NOT EXISTS dataset_iklan (
-        id           INT AUTO_INCREMENT PRIMARY KEY,
-        platform     ENUM('Shopee','Tokopedia','Lazada','Bukalapak',
-                          'Instagram','TikTok','Lainnya') NOT NULL DEFAULT 'Lainnya',
-        brand        VARCHAR(200),
-        teks_iklan   TEXT NOT NULL,
-        label_manual ENUM('tidak_overclaim','rendah','sedang','tinggi'),
-        sumber_file  VARCHAR(255),
-        uploaded_by  INT,
-        uploaded_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
-        is_processed TINYINT(1) DEFAULT 0,
+        id              INT AUTO_INCREMENT PRIMARY KEY,
+
+        product_id      VARCHAR(100)    COMMENT 'ID produk dari sumber data',
+        brand           VARCHAR(200),
+        product_name    VARCHAR(300),
+        category        VARCHAR(150),
+
+        platform        ENUM('Shopee','Tokopedia','Lazada','Bukalapak',
+                             'Instagram','TikTok','Lainnya')
+                        NOT NULL DEFAULT 'Lainnya',
+        price           DECIMAL(15,2),
+        rating          FLOAT,
+        total_review    INT,
+
+        claim_text      TEXT        NOT NULL COMMENT 'Teks klaim iklan utama',
+        ingredients     TEXT        COMMENT 'Daftar bahan/kandungan produk',
+        review_text     TEXT        COMMENT 'Teks ulasan pembeli',
+
+        review_length   INT         COMMENT 'Panjang karakter review_text',
+        claim_length    INT         COMMENT 'Panjang karakter claim_text',
+
+        label_overclaim TINYINT(1)  COMMENT '0=tidak overclaim, 1=overclaim',
+        label_manual    ENUM('tidak_overclaim','rendah','sedang','tinggi')
+                        COMMENT 'Label 4-kelas ANFIS (diturunkan otomatis jika kosong)',
+
+        sumber_file     VARCHAR(255),
+        uploaded_by     INT,
+        uploaded_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
+        is_processed    TINYINT(1) DEFAULT 0,
+
         FOREIGN KEY (uploaded_by) REFERENCES users(id)
     ) ENGINE=InnoDB
     """)
 
-    # 4. Tabel preprocessing_result
+    # ── Tabel preprocessing_result ────────────────────────────
     cur.execute("""
     CREATE TABLE IF NOT EXISTS preprocessing_result (
-        id             INT AUTO_INCREMENT PRIMARY KEY,
-        iklan_id       INT NOT NULL,
-        token_count    INT,
-        tokens         TEXT,
-        after_stopword TEXT,
-        after_stemming TEXT,
+        id              INT AUTO_INCREMENT PRIMARY KEY,
+        iklan_id        INT NOT NULL,
+        token_count     INT,
+        tokens          TEXT,
+        after_stopword  TEXT,
+        after_stemming  TEXT,
         normalized_text TEXT,
-        processed_at   DATETIME DEFAULT CURRENT_TIMESTAMP,
+        processed_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (iklan_id) REFERENCES dataset_iklan(id) ON DELETE CASCADE
     ) ENGINE=InnoDB
     """)
 
-    # 5. Tabel fitur_tekstual
+    # ── Tabel fitur_tekstual (diperluas) ──────────────────────
     cur.execute("""
     CREATE TABLE IF NOT EXISTS fitur_tekstual (
-        id                INT AUTO_INCREMENT PRIMARY KEY,
-        iklan_id          INT NOT NULL,
-        tfidf_score       FLOAT,
-        hyperbolic_count  INT DEFAULT 0,
-        scientific_count  INT DEFAULT 0,
-        absolute_count    INT DEFAULT 0,
-        intensity_score   FLOAT DEFAULT 0,
-        ngram_features    TEXT,
-        exclamation_count INT DEFAULT 0,
-        uppercase_ratio   FLOAT DEFAULT 0,
-        avg_word_length   FLOAT DEFAULT 0,
-        extracted_at      DATETIME DEFAULT CURRENT_TIMESTAMP,
+        id                   INT AUTO_INCREMENT PRIMARY KEY,
+        iklan_id             INT NOT NULL,
+        tfidf_score          FLOAT,
+        ngram_features       TEXT,
+        hyperbolic_count     INT   DEFAULT 0,
+        scientific_count     INT   DEFAULT 0,
+        absolute_count       INT   DEFAULT 0,
+        intensity_score      FLOAT DEFAULT 0,
+        exclamation_count    INT   DEFAULT 0,
+        uppercase_ratio      FLOAT DEFAULT 0,
+        avg_word_length      FLOAT DEFAULT 0,
+        claim_length_norm    FLOAT DEFAULT 0,
+        review_length_norm   FLOAT DEFAULT 0,
+        rating_norm          FLOAT DEFAULT 0,
+        ingredient_count     INT   DEFAULT 0,
+        ingredient_scientific INT  DEFAULT 0,
+        extracted_at         DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (iklan_id) REFERENCES dataset_iklan(id) ON DELETE CASCADE
     ) ENGINE=InnoDB
     """)
 
-    # 6. Tabel model_config
+    # ── Tabel model_config ────────────────────────────────────
     cur.execute("""
     CREATE TABLE IF NOT EXISTS model_config (
         id                       INT AUTO_INCREMENT PRIMARY KEY,
@@ -126,29 +149,29 @@ def run_setup():
     ) ENGINE=InnoDB
     """)
 
-    # 7. Tabel detection_run
+    # ── Tabel detection_run ───────────────────────────────────
     cur.execute("""
     CREATE TABLE IF NOT EXISTS detection_run (
-        id            INT AUTO_INCREMENT PRIMARY KEY,
-        run_name      VARCHAR(150),
-        config_id     INT,
-        total_data    INT,
+        id             INT AUTO_INCREMENT PRIMARY KEY,
+        run_name       VARCHAR(150),
+        config_id      INT,
+        total_data     INT,
         processed_data INT DEFAULT 0,
-        accuracy      FLOAT,
-        precision_val FLOAT,
-        recall_val    FLOAT,
-        f1_score      FLOAT,
-        status        ENUM('running','completed','failed') DEFAULT 'running',
-        run_by        INT,
-        started_at    DATETIME DEFAULT CURRENT_TIMESTAMP,
-        finished_at   DATETIME,
-        log_text      TEXT,
+        accuracy       FLOAT,
+        precision_val  FLOAT,
+        recall_val     FLOAT,
+        f1_score       FLOAT,
+        status         ENUM('running','completed','failed') DEFAULT 'running',
+        run_by         INT,
+        started_at     DATETIME DEFAULT CURRENT_TIMESTAMP,
+        finished_at    DATETIME,
+        log_text       TEXT,
         FOREIGN KEY (config_id) REFERENCES model_config(id),
         FOREIGN KEY (run_by)    REFERENCES users(id)
     ) ENGINE=InnoDB
     """)
 
-    # 8. Tabel hasil_deteksi
+    # ── Tabel hasil_deteksi ───────────────────────────────────
     cur.execute("""
     CREATE TABLE IF NOT EXISTS hasil_deteksi (
         id                  INT AUTO_INCREMENT PRIMARY KEY,
@@ -168,7 +191,7 @@ def run_setup():
     ) ENGINE=InnoDB
     """)
 
-    # 9. Tabel activity_log
+    # ── Tabel activity_log ────────────────────────────────────
     cur.execute("""
     CREATE TABLE IF NOT EXISTS activity_log (
         id         INT AUTO_INCREMENT PRIMARY KEY,
@@ -184,85 +207,162 @@ def run_setup():
     print("✅ Semua tabel berhasil dibuat.")
 
     # ── Seed Users ────────────────────────────────────────────
-    admin_pw = hash_pw("admin123")
-    user_pw  = hash_pw("user123")
-
-    for uname, pw, role, fname, email in [
-        ("admin", admin_pw, "admin", "Administrator",  "admin@skincare.ac.id"),
-        ("user1", user_pw,  "user",  "Pengguna Umum",  "user1@skincare.ac.id"),
+    for uname, pw_plain, role, fname, email in [
+        ("admin", "admin123", "admin", "Administrator", "admin@skincare.ac.id"),
+        ("user1", "user123",  "user",  "Pengguna Umum", "user1@skincare.ac.id"),
     ]:
-        cur.execute(
-            "SELECT id FROM users WHERE username=%s", (uname,))
+        cur.execute("SELECT id FROM users WHERE username=%s", (uname,))
         if not cur.fetchone():
             cur.execute(
-                "INSERT INTO users (username,password,role,full_name,email) "
-                "VALUES (%s,%s,%s,%s,%s)",
-                (uname, pw, role, fname, email))
-            print(f"   👤 User '{uname}' dibuat (pass: {uname.replace('user1','user')}123)")
+                "INSERT INTO users (username,password,role,full_name,email) VALUES (%s,%s,%s,%s,%s)",
+                (uname, hash_pw(pw_plain), role, fname, email)
+            )
+            print(f"   👤 User '{uname}' dibuat (pass: {pw_plain})")
         else:
             print(f"   ℹ️  User '{uname}' sudah ada, dilewati.")
 
     # ── Seed model_config ─────────────────────────────────────
     cur.execute("SELECT id FROM model_config LIMIT 1")
     if not cur.fetchone():
-        cur.execute(
-            "INSERT INTO model_config (config_name) VALUES ('Default ANFIS Config')")
+        cur.execute("INSERT INTO model_config (config_name) VALUES ('Default ANFIS Config')")
         print("✅ Default model config dibuat.")
 
     # ── Seed Data Demo Iklan ──────────────────────────────────
     cur.execute("SELECT COUNT(*) FROM dataset_iklan")
     count = cur.fetchone()[0]
+
     if count == 0:
+        # urutan: product_id, brand, product_name, category, platform,
+        #         price, rating, total_review, claim_text, ingredients,
+        #         review_text, review_length, claim_length, label_overclaim, uploaded_by
         demo_data = [
-            ("Shopee", "Brand A",
-             "Serum ini terbukti secara klinis memutihkan kulit 100% hanya dalam 7 hari! Dijamin ampuh!",
-             "tinggi"),
-            ("Tokopedia", "Brand B",
-             "Pelembab wajah dengan kandungan hyaluronic acid, cocok untuk kulit kering dan kombinasi.",
-             "tidak_overclaim"),
-            ("Shopee", "Brand C",
-             "Krim ajaib! Hilangkan jerawat selamanya tanpa efek samping, formula revolusioner!",
-             "tinggi"),
-            ("Instagram", "Brand D",
-             "Sunscreen SPF 50 PA++++ melindungi dari sinar UVA dan UVB, ringan di kulit.",
-             "tidak_overclaim"),
-            ("Tokopedia", "Brand E",
-             "Toner terbaik! Pori-pori mengecil dramatis, kulit langsung cerah maksimal!",
-             "sedang"),
-            ("TikTok", "Brand F",
-             "Masker wajah alami dari bahan pilihan, cocok untuk semua jenis kulit.",
-             "tidak_overclaim"),
-            ("Lazada", "Brand G",
-             "Eye cream super ampuh! Hapus kantung mata seketika, terlihat 10 tahun lebih muda!",
-             "tinggi"),
-            ("Shopee", "Brand H",
-             "Essence brightening dengan niacinamide 10%, bantu meratakan warna kulit.",
-             "rendah"),
-            ("Bukalapak", "Brand I",
-             "Sabun muka anti-aging permanen! Kulit awet muda abadi! Nomor 1 Indonesia!",
-             "tinggi"),
-            ("Tokopedia", "Brand J",
-             "Body lotion dengan vitamin E dan C untuk kelembapan kulit sepanjang hari.",
-             "tidak_overclaim"),
-            ("Instagram", "Brand K",
-             "Serum vitamin C 20% membantu mencerahkan kulit kusam dan mengurangi hiperpigmentasi.",
-             "rendah"),
-            ("Shopee", "Brand L",
-             "Krim whitening instan! Putih sempurna dalam 3 hari, 100% dijamin atau uang kembali!",
-             "tinggi"),
-            ("TikTok", "Brand M",
-             "Tinted moisturizer ringan untuk tampilan natural sehari-hari, SPF 30.",
-             "tidak_overclaim"),
-            ("Tokopedia", "Brand N",
-             "Facial wash dengan AHA BHA membersihkan pori secara menyeluruh.",
-             "rendah"),
-            ("Shopee", "Brand O",
-             "Retinol serum terdermis! Hapus kerutan wajah total permanen selamanya!",
-             "tinggi"),
+            ("501","Scarlett","Scarlett Sunscreen Series 8","Sunscreen","Shopee",
+             106150,4.8,2070,
+             "secara bertahap mencerahkan dan menyamarkan noda hitam hasil dapat berbeda",
+             "Tea Tree, Vitamin C, Centella Asiatica, Hyaluronic Acid",
+             "Efeknya biasa saja.",3,10,0,1),
+
+            ("502","Somethinc","Somethinc Niacinamide 10% Serum","Serum","Tokopedia",
+             129000,4.7,5430,
+             "100% terbukti memutihkan kulit dalam 7 hari dijamin atau uang kembali!",
+             "Niacinamide 10%, Zinc PCA, Aqua",
+             "Kulit terasa lebih cerah setelah 2 minggu.",19,8,1,1),
+
+            ("503","Wardah","Wardah Lightening Series Moisturizer","Moisturizer","Shopee",
+             45000,4.5,8900,
+             "melembapkan dan merawat kulit wajah untuk tampilan lebih sehat",
+             "Vitamin E, Aloe Vera Extract, Glycerin",
+             "Bagus untuk kulit kering, tidak lengket.",5,8,0,1),
+
+            ("504","Ms Glow","Ms Glow Whitening Cream","Whitening","Instagram",
+             250000,4.2,12000,
+             "putih permanen dalam 3 hari pemakaian rutin! ampuh 100% dijamin!",
+             "Mercury (trace), Hydroquinone, Tretinoin",
+             "Cepat putih tapi kulit jadi tipis.",6,10,1,1),
+
+            ("505","COSRX","COSRX Advanced Snail 96 Mucin Power Essence","Essence","Tokopedia",
+             215000,4.9,3200,
+             "membantu memperbaiki skin barrier dan melembapkan kulit secara intensif",
+             "Snail Secretion Filtrate 96%, Sodium Hyaluronate, Allantoin",
+             "Tekstur lengket tapi kulit jadi lembap banget.",8,11,0,1),
+
+            ("506","Emina","Emina Sun Protection SPF 30","Sunscreen","Shopee",
+             38000,4.3,6700,
+             "lindungi kulit dari paparan sinar matahari setiap hari",
+             "Titanium Dioxide, Zinc Oxide, Aloe Vera",
+             "Ringan dan tidak membekas di kulit.",3,7,0,1),
+
+            ("507","Hanasui","Hanasui Tinted Lip Serum","Lip Care","TikTok",
+             25000,4.6,9800,
+             "bibir merah muda alami selamanya! hasilkan bibir sempurna abadi!",
+             "Collagen, Vitamin E, Sweet Almond Oil",
+             "Warnanya natural, tapi tidak permanen.",9,10,1,1),
+
+            ("508","The Originote","The Originote Ceramide Moisturizer","Moisturizer","Tokopedia",
+             55000,4.7,4100,
+             "memperkuat skin barrier dan mencegah kehilangan kelembapan kulit",
+             "Ceramide NP, Ceramide AP, Ceramide EOP, Hyaluronic Acid",
+             "Sangat cocok untuk kulit sensitif saya.",6,9,0,1),
+
+            ("509","Natasha","Natasha Whitening Serum","Whitening","Shopee",
+             320000,3.8,1500,
+             "cerahkan kulit gelap jadi putih bersih sempurna dalam 5 hari!",
+             "Arbutin, Kojic Acid, Vitamin C",
+             "Lumayan tapi hasilnya tidak secepat klaim.",12,11,1,1),
+
+            ("510","Bioderma","Bioderma Sensibio H2O Micellar Water","Cleanser","Lazada",
+             185000,4.8,2800,
+             "membersihkan makeup dan kotoran dengan lembut tanpa perlu dibilas",
+             "Aqua, PEG-6 Caprylic/Capric Glycerides, Cucurbit Pepo Extract",
+             "Terbaik untuk kulit sensitif, tidak perih.",4,9,0,1),
+
+            ("511","Azarine","Azarine Hydrasoothe Sunscreen Gel SPF 45","Sunscreen","Shopee",
+             59000,4.8,15600,
+             "sunscreen gel ringan anti-lengket cocok untuk kulit berminyak dan berjerawat",
+             "Centella Asiatica, Niacinamide, Hyaluronic Acid, SPF 45 PA++++",
+             "Favorit! Tidak bikin kulit makin berminyak.",5,11,0,1),
+
+            ("512","Scarlett","Scarlett Brightly Ever After Serum","Serum","Tokopedia",
+             100000,4.5,7800,
+             "kulit langsung cerah bersinar total merata hanya dalam 1x pakai!",
+             "Niacinamide, Vitamin C, Alpha Arbutin",
+             "Perlu waktu setidaknya 2 minggu untuk melihat perubahan.",11,10,1,1),
+
+            ("513","Cetaphil","Cetaphil Gentle Skin Cleanser","Cleanser","Tokopedia",
+             120000,4.9,4500,
+             "formula lembut tidak mengiritasi cocok untuk kulit sensitif dan bermasalah",
+             "Aqua, Cetyl Alcohol, Propylene Glycol, Butylene Glycol",
+             "Sudah pakai bertahun-tahun, kulit tetap aman.",5,9,0,1),
+
+            ("514","Y.O.U","Y.O.U Whitening Day Cream SPF 30","Whitening","Shopee",
+             49000,4.1,3200,
+             "hilangkan flek hitam noda jerawat secara maksimal permanen terbukti 100%!",
+             "Vitamin C, Niacinamide, SPF 30 Filter",
+             "Ada perubahan sedikit tapi tidak seperti yang diklaim.",12,9,1,1),
+
+            ("515","Garnier","Garnier Bright Complete Vitamin C Serum","Serum","Lazada",
+             75000,4.4,9100,
+             "mencerahkan kulit kusam dengan kandungan Vitamin C aktif diformulasikan oleh dermatologis",
+             "Ascorbic Acid 30x, Salicylic Acid, Lemon Extract",
+             "Kulit terasa lebih cerah setelah 1 bulan.",5,10,0,1),
+
+            ("516","Revlon","Revlon Photoready Primer","Primer","Instagram",
+             180000,4.0,890,
+             "hilangkan semua pori-pori wajah seketika tampak mulus total sempurna!",
+             "Dimethicone, Cyclopentasiloxane, Niacinamide",
+             "Menutupi pori sementara, bukan menghilangkan.",11,10,1,1),
+
+            ("517","La Roche-Posay","La Roche-Posay Toleriane Double Repair Moisturizer","Moisturizer","Tokopedia",
+             390000,4.9,2100,
+             "memperbaiki skin barrier dalam 1 jam terbukti secara dermatologis uji klinis",
+             "Ceramide 3, Niacinamide, Prebiotic Thermal Water",
+             "Mahal tapi worth it untuk kulit sensitif.",5,9,0,1),
+
+            ("518","Kahf","Kahf Beyond Your Limits Face Wash","Cleanser","Shopee",
+             35000,4.6,11200,
+             "bersihkan wajah dari kotoran dan minyak berlebih untuk kulit segar",
+             "Charcoal, Salicylic Acid, Menthol",
+             "Segar banget di wajah, cocok untuk pria aktif.",4,8,0,1),
+
+            ("519","Clio","Clio Kill Lash Superproof Mascara","Makeup","TikTok",
+             165000,4.5,4300,
+             "bulu mata lentik panjang abadi sempurna 24 jam anti air 100% tahan segala kondisi!",
+             "Aqua, Beeswax, Carnauba Wax, Iron Oxides",
+             "Tahan lama, tapi tidak 100% anti air.",12,9,1,1),
+
+            ("520","Vaseline","Vaseline Intensive Care Body Lotion","Body Care","Tokopedia",
+             45000,4.7,18900,
+             "melembapkan kulit tubuh kering dengan perlindungan kelembapan lebih baik",
+             "Water, Glycerin, Stearic Acid, Petrolatum",
+             "Kulit jadi lembap, harga terjangkau.",4,8,0,1),
         ]
+
         cur.executemany(
-            "INSERT INTO dataset_iklan (platform,brand,teks_iklan,label_manual,"
-            "uploaded_by) VALUES (%s,%s,%s,%s,1)",
+            """INSERT INTO dataset_iklan
+               (product_id, brand, product_name, category, platform,
+                price, rating, total_review, claim_text, ingredients,
+                review_text, review_length, claim_length, label_overclaim, uploaded_by)
+               VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)""",
             demo_data
         )
         print(f"✅ {len(demo_data)} data iklan demo berhasil dimasukkan.")
@@ -274,8 +374,7 @@ def run_setup():
 
     print("\n" + "=" * 60)
     print("  ✅ SETUP SELESAI!")
-    print("  Jalankan aplikasi dengan:")
-    print("      streamlit run app.py")
+    print("  Jalankan: streamlit run app.py")
     print("  Login: admin / admin123  |  user1 / user123")
     print("=" * 60)
 
