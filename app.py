@@ -54,17 +54,21 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
     # Info user
-    st.markdown(f"""
-    <div style="padding:0.75rem 1rem;margin-bottom:0.5rem;
-                background:rgba(255,255,255,0.12);border-radius:10px;
-                font-size:0.85rem">
-        <div style="font-weight:700">{user['full_name']}</div>
-        <div style="opacity:0.75;font-size:0.75rem">
-            {'👑 Administrator' if role=='admin' else '👤 Pengguna'} &nbsp;|&nbsp;
-            @{user['username']}
+    # Info user
+    if user is not None:
+        st.markdown(f"""
+        <div style="padding:0.75rem 1rem;margin-bottom:0.5rem;
+                    background:rgba(255,255,255,0.12);border-radius:10px;
+                    font-size:0.85rem">
+            <div style="font-weight:700">{user.get('full_name', 'Nama Tidak Ditemukan')}</div>
+            <div style="opacity:0.75;font-size:0.75rem">
+                {'👑 Administrator' if role=='admin' else '👤 Pengguna'} &nbsp;|&nbsp;
+                @{user.get('username', 'user')}
+            </div>
         </div>
-    </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
+    else:
+        st.warning("Data pengguna gagal dimuat. Cek koneksi database.")
 
     st.markdown("---")
 
